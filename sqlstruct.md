@@ -19,7 +19,7 @@ func makeMetaStoreRevKey(tableName string) string {
 
 ```
 
-# MetaStore (meta-store) r.1
+# MetaStore (meta-store) r.2
 
 * `builder`: `makeSQLCreate`, `metaStoreTableName string`
 * `strip-spaces`
@@ -34,7 +34,7 @@ func makeMetaStoreRevKey(tableName string) string {
 
 ```sql
 CREATE TABLE `x_meta_store` (
-  `meta_key` varchar(64) CHARACTER SET ascii NOT NULL COMMENT 'Key of meta information',
+  `meta_key` varchar(128) CHARACTER SET ascii NOT NULL COMMENT 'Key of meta information',
   `meta_value` text NOT NULL COMMENT 'Value of meta information',
   `modify_at` bigint(20) NOT NULL DEFAULT '0' COMMENT 'Timestamp of last update',
   PRIMARY KEY (`meta_key`)
@@ -76,4 +76,20 @@ metaStore := MetaStore {
   Conn: m.conn,
 }
 err = metaStore.StoreRevision(makeMetaStoreRevKey(metaStoreTableName), targetRev)
+```
+
+## Migrations
+
+* `strip-spaces`
+* `replace`:
+  - ```ALTER TABLE `(x_meta_store)`$```
+  - `$1`
+  - ``` metaStoreTableName ```
+
+### To r.2
+
+```sql
+ALTER TABLE `x_meta_store`
+CHANGE COLUMN `meta_key` `meta_key` VARCHAR(128) CHARACTER SET 'ascii' NOT NULL
+COMMENT 'Key of meta information' ;
 ```
