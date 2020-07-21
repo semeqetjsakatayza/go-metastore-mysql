@@ -3,8 +3,11 @@ package metastore
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strconv"
 	"time"
+
+	mysqlerrors "github.com/semeqetjsakatayza/go-mysql-errors"
 )
 
 // MetaStore handles operations of meta informations.
@@ -15,10 +18,10 @@ type MetaStore struct {
 	Conn *sql.DB
 }
 
-// UpgradeSchema perform revision check and upgrade of meta store table schema.
-func (m *MetaStore) UpgradeSchema() (schemaChanged bool, err error) {
+// PrepareSchema perform revision check and upgrade of meta store table schema.
+func (m *MetaStore) PrepareSchema() (schemaChanged bool, err error) {
 	schemaMgmt := schemaManager{
-		metaStoreTableName: m.TableName,
+		referenceTableName: m.TableName,
 		ctx:                m.Ctx,
 		conn:               m.Conn,
 	}
@@ -31,13 +34,28 @@ func (m *MetaStore) UpgradeSchema() (schemaChanged bool, err error) {
 			metaStoreTableName: m.TableName,
 		}}
 	}
-	return schemaMgmt.UpgradeSchemaOfMetaStore(revRecords)
+	if schemaChanged, err = schemaMgmt.UpgradeSchemaOfMetaStore(revRecords); nil != err {
+		return
+	} else if schemaChanged {
+		if revRecords, err = schemaMgmt.fetchSchemaRevisionOfMetaStore(); nil != err {
+			return
+		}
+	}
+	if !isMetaStoreSchemasUpToDate(revRecords) {
+		err = fmt.Errorf("meta-store %s schema not up to date: %#v", m.TableName, revRecords)
+	}
+	return
 }
 
 // MigrateSchemaRevisionKeyGen1 update revision key from legacy integrated meta store.
 func (m *MetaStore) MigrateSchemaRevisionKeyGen1(legacyRevisionKey string) (err error) {
 	var ok bool
-	if ok, _, _, err = m.fetch(legacyRevisionKey); (!ok) || (nil != err) {
+	if ok, _, _, err = m.fetch(legacyRevisionKey); !ok {
+		return
+	} else if nil != err {
+		if mysqlerrors.IsTableNotExistError(err) {
+			err = nil
+		}
 		return
 	}
 	_, err = m.Conn.Exec(sqlStmtMigrateLegacySchemaRevKeyGen1(m.TableName), makeMetaStoreRevKey(m.TableName), legacyRevisionKey)
