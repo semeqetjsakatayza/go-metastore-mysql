@@ -14,18 +14,24 @@ func makeMetaStoreRevKey(tableName string) string {
 
 func sqlCreateMetaStore(metaStoreTableName string) string {
 	return "CREATE TABLE `" + (metaStoreTableName) + "` (" +
-		"`meta_key` varchar(64) CHARACTER SET ascii NOT NULL COMMENT 'Key of meta information'," +
+		"`meta_key` varchar(128) CHARACTER SET ascii NOT NULL COMMENT 'Key of meta information'," +
 		"`meta_value` text NOT NULL COMMENT 'Value of meta information'," +
 		"`modify_at` bigint(20) NOT NULL DEFAULT '0' COMMENT 'Timestamp of last update'," +
 		"PRIMARY KEY (`meta_key`)" +
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='" + (metaStoreTableName) + " storage table'"
 }
 
+func makeSQLMigrateMetaStoreToRev2(metaStoreTableName string) string {
+	return "ALTER TABLE `" + (metaStoreTableName) + "`" +
+		" CHANGE COLUMN `meta_key` `meta_key` VARCHAR(128) CHARACTER SET 'ascii' NOT NULL" +
+		" COMMENT 'Key of meta information'"
+}
+
 // ** SQL schema external filter
 
 const metaKeyMetaStoreSchemaRev = "meta-store.schema"
 
-const currentMetaStoreSchemaRev = 1
+const currentMetaStoreSchemaRev = 2
 
 type schemaRevision struct {
 	MetaStore []*schemaRevisionOfMetaStore
@@ -103,6 +109,11 @@ func (m *schemaManager) upgradeSchemaMetaStore(currentRev int32, metaStoreTableN
 		if err = m.execMetaStoreSchemaModification(sqlCreateMetaStore(metaStoreTableName), metaStoreTableName, currentMetaStoreSchemaRev); nil == err {
 			return true, nil
 		}
+	case 1:
+		if err = m.execMetaStoreSchemaModification(makeSQLMigrateMetaStoreToRev2(metaStoreTableName), metaStoreTableName, 2); nil == err {
+			schemaChanged = true
+		}
+		return
 	default:
 		err = fmt.Errorf("unknown meta-store schema revision: %d", currentRev)
 	}
