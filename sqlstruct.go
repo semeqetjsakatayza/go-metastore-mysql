@@ -33,21 +33,28 @@ const metaKeyMetaStoreSchemaRev = "meta-store.schema"
 
 const currentMetaStoreSchemaRev = 2
 
-type schemaRevision struct {
-	MetaStore []*schemaRevisionOfMetaStore
-}
-
-func (rev *schemaRevision) IsUpToDate() bool {
-	for _, revRecord := range rev.MetaStore {
-		if currentMetaStoreSchemaRev != revRecord.currentRev {
+func isMetaStoreSchemasUpToDate(revRecords []*schemaRevisionOfMetaStore) bool {
+	for _, recRec := range revRecords {
+		if currentMetaStoreSchemaRev != recRec.currentRev {
 			return false
 		}
 	}
 	return true
 }
 
+type schemaRevision struct {
+	MetaStore []*schemaRevisionOfMetaStore
+}
+
+func (rev *schemaRevision) IsUpToDate() bool {
+	if !isMetaStoreSchemasUpToDate(rev.MetaStore) {
+		return false
+	}
+	return true
+}
+
 type schemaManager struct {
-	metaStoreTableName string
+	referenceTableName string
 	ctx                context.Context
 	conn               *sql.DB
 }
@@ -67,11 +74,11 @@ type schemaRevisionOfMetaStore struct {
 
 func (m *schemaManager) fetchSchemaRevisionOfMetaStore() (revisionRecords []*schemaRevisionOfMetaStore, err error) {
 	metaStore := MetaStore{
-		TableName: m.metaStoreTableName,
+		TableName: m.referenceTableName,
 		Ctx:       m.ctx,
 		Conn:      m.conn,
 	}
-	rev, _, err := metaStore.FetchRevision(makeMetaStoreRevKey(m.metaStoreTableName))
+	rev, _, err := metaStore.FetchRevision(makeMetaStoreRevKey(m.referenceTableName))
 	if nil != err {
 		if mysqlerrors.IsTableNotExistError(err) {
 			err = nil
@@ -83,7 +90,7 @@ func (m *schemaManager) fetchSchemaRevisionOfMetaStore() (revisionRecords []*sch
 	}
 	revisionRecords = []*schemaRevisionOfMetaStore{{
 		currentRev:         rev,
-		metaStoreTableName: m.metaStoreTableName,
+		metaStoreTableName: m.referenceTableName,
 	}}
 	return
 }
@@ -93,7 +100,7 @@ func (m *schemaManager) execMetaStoreSchemaModification(sqlStmt string, metaStor
 		return
 	}
 	metaStore := MetaStore{
-		TableName: m.metaStoreTableName,
+		TableName: m.referenceTableName,
 		Ctx:       m.ctx,
 		Conn:      m.conn,
 	}
