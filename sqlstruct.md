@@ -47,11 +47,11 @@ CREATE TABLE `x_meta_store` (
 
 ```go
 metaStore := MetaStore {
-  TableName: m.metaStoreTableName,
+  TableName: m.referenceTableName,
   Ctx: m.ctx,
   Conn: m.conn,
 }
-rev, _, err := metaStore.FetchRevision(makeMetaStoreRevKey(m.metaStoreTableName))
+rev, _, err := metaStore.FetchRevision(makeMetaStoreRevKey(m.referenceTableName))
 if nil != err {
   if mysqlerrors.IsTableNotExistError(err) {
     err = nil
@@ -63,7 +63,7 @@ if 0 == rev {
 }
 revisionRecords = []*schemaRevisionOfMetaStore{&schemaRevisionOfMetaStore{
   currentRev: rev,
-	metaStoreTableName: m.metaStoreTableName,
+	metaStoreTableName: m.referenceTableName,
 },}
 ```
 
@@ -71,7 +71,7 @@ revisionRecords = []*schemaRevisionOfMetaStore{&schemaRevisionOfMetaStore{
 
 ```go
 metaStore := MetaStore {
-  TableName: m.metaStoreTableName,
+  TableName: m.referenceTableName,
   Ctx: m.ctx,
   Conn: m.conn,
 }
