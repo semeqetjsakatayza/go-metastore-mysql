@@ -34,6 +34,16 @@ func (m *MetaStore) UpgradeSchema() (schemaChanged bool, err error) {
 	return schemaMgmt.UpgradeSchemaOfMetaStore(revRecords)
 }
 
+// MigrateSchemaRevisionKeyGen1 update revision key from legacy integrated meta store.
+func (m *MetaStore) MigrateSchemaRevisionKeyGen1(legacyRevisionKey string) (err error) {
+	var ok bool
+	if ok, _, _, err = m.fetch(legacyRevisionKey); (!ok) || (nil != err) {
+		return
+	}
+	_, err = m.Conn.Exec(sqlStmtMigrateLegacySchemaRevKeyGen1(m.TableName), makeMetaStoreRevKey(m.TableName), legacyRevisionKey)
+	return
+}
+
 // Initialize given `metaKey` with given `metaValue`.
 func (m *MetaStore) Initialize(metaKey, metaValue string) (err error) {
 	modifyAt := time.Now().Unix()

@@ -56,3 +56,19 @@ INSERT INTO `x_meta_store` (`meta_key`, `meta_value`, `modify_at`)
 VALUES (?, ?, ?)
 ON DUPLICATE KEY UPDATE `meta_value` = ?, `modify_at` = ?
 ```
+
+# Migrate Legacy Schema Revision Key from Gen-1
+
+Rename schema revision key from Gen-1
+
+* `builder`: `sqlStmtMigrateLegacySchemaRevKeyGen1`, `metaStoreTableName string`
+* `strip-spaces`
+* `replace`:
+  - ``` UPDATE `(x_meta_store)` ```
+  - `$1`
+  - ``` metaStoreTableName ```
+
+```sql
+UPDATE `x_meta_store`
+SET `meta_key` = ? WHERE (`meta_key` = ?);
+```
