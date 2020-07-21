@@ -16,3 +16,8 @@ func sqlStmtStoreMetaValue(metaStoreTableName string) string {
 		" VALUES (?, ?, ?)" +
 		" ON DUPLICATE KEY UPDATE `meta_value` = ?, `modify_at` = ?"
 }
+
+func sqlStmtMigrateLegacySchemaRevKeyGen1(metaStoreTableName string) string {
+	return "UPDATE `" + (metaStoreTableName) + "`" +
+		" SET `meta_key` = ? WHERE (`meta_key` = ?)"
+}
