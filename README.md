@@ -7,6 +7,6 @@ This package implements meta store support functions with table in MySQL databas
 ## Generate SQL statement code
 
 ```sh
-go-literal-code-gen -in sqlstmt.md -out sqlstmt.go
-go-literal-code-gen -in sqlstruct.md -out sqlstruct.go -sqlschema
+go-literal-code-gen -do-not-edit -in sqlstmt.md -out sqlstmt.go
+go-literal-code-gen -do-not-edit -in sqlstruct.md -out sqlstruct.go -sqlschema
 ```
