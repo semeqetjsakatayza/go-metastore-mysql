@@ -23,3 +23,14 @@ func sqlStmtMigrateLegacySchemaRevKeyGen1(metaStoreTableName string) string {
 	return "UPDATE `" + (metaStoreTableName) + "`" +
 		" SET `meta_key` = ? WHERE (`meta_key` = ?)"
 }
+
+func sqlTxStmtFetchMetaModifyTimeWithLock(metaStoreTableName string) string {
+	return "SELECT `modify_at`" +
+		" FROM `" + (metaStoreTableName) + "`" +
+		" WHERE (`meta_key` = ?) FOR UPDATE"
+}
+
+func sqlTxStmtUpdateMetaRowModifyTime(metaStoreTableName string) string {
+	return "UPDATE `" + (metaStoreTableName) + "`" +
+		" SET `modify_at` = ? WHERE `meta_key`= ?"
+}
