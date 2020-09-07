@@ -72,3 +72,36 @@ Rename schema revision key from Gen-1
 UPDATE `x_meta_store`
 SET `meta_key` = ? WHERE (`meta_key` = ?);
 ```
+
+# Lock Meta Row with Fetching Modification Time
+
+Transcation lock. Data row must exists before lock.
+
+* `builder`: `sqlTxStmtFetchMetaModifyTimeWithLock`, `metaStoreTableName string`
+* `strip-spaces`
+* `replace`:
+  - ``` FROM `(x_meta_store)` ```
+  - `$1`
+  - ``` metaStoreTableName ```
+
+```sql
+SELECT `modify_at`
+FROM `x_meta_store`
+WHERE (`meta_key` = ?) FOR UPDATE;
+```
+
+# Unlock Meta Row with Updating Modification Time
+
+Release transcation lock.
+
+* `builder`: `sqlTxStmtUpdateMetaRowModifyTime`, `metaStoreTableName string`
+* `strip-spaces`
+* `replace`:
+  - ``` UPDATE `(x_meta_store)` ```
+  - `$1`
+  - ``` metaStoreTableName ```
+
+```sql
+UPDATE `x_meta_store`
+SET `modify_at` = ? WHERE `meta_key`= ?;
+```
