@@ -50,12 +50,12 @@ func (m *MetaStore) PrepareSchema() (schemaChanged bool, err error) {
 // MigrateSchemaRevisionKeyGen1 update revision key from legacy integrated meta store.
 func (m *MetaStore) MigrateSchemaRevisionKeyGen1(legacyRevisionKey string) (err error) {
 	var ok bool
-	if ok, _, _, err = m.fetch(legacyRevisionKey); !ok {
-		return
-	} else if nil != err {
+	if ok, _, _, err = m.fetch(legacyRevisionKey); nil != err {
 		if mysqlerrors.IsTableNotExistError(err) {
 			err = nil
 		}
+		return
+	} else if !ok {
 		return
 	}
 	_, err = m.Conn.Exec(sqlStmtMigrateLegacySchemaRevKeyGen1(m.TableName), makeMetaStoreRevKey(m.TableName), legacyRevisionKey)
