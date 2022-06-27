@@ -100,7 +100,7 @@ func (m *MetaStore) FetchBool(metaKey string, defaultValue bool) (value bool, mo
 		return
 	}
 	if ok {
-		if "1" == textValue {
+		if textValue == "1" {
 			value = true
 		} else {
 			value = false
