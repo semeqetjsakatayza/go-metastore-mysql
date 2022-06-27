@@ -27,14 +27,14 @@ func unpackPKCS1PrivateKey(keyText string) (priKey *rsa.PrivateKey, err error) {
 	return
 }
 
-// FetchRSAPrivateKey read RSA private key from storage.
+// PrepareRSAPrivateKey read RSA private key from storage.
 //
 // A new private key will be generate if existed key expires.
 //
 // Caller can keep resulted `modifyAt` time-stamp and feed it as `currentModifyAt`
 // on next invoke. Key parsing will be skip and resulted `ok` will be false
 // if the modification time-stamp (ie: `modifyAt`) is not changed.
-func (m *MetaStore) FetchRSAPrivateKey(metaKey string, keyBits int, maxAcceptableAge time.Duration, currentModifyAt int64) (ok bool, priKey *rsa.PrivateKey, modifyAt int64, err error) {
+func (m *MetaStore) PrepareRSAPrivateKey(metaKey string, keyBits int, maxAcceptableAge time.Duration, currentModifyAt int64) (ok bool, priKey *rsa.PrivateKey, modifyAt int64, err error) {
 	ok, keyText, modifyAt, err := m.fetch(metaKey)
 	if nil != err {
 		return
